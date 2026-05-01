@@ -27,6 +27,7 @@ General Public License for more details.
 #include <string>
 #include <vector>
 #include <deque>
+#include <mutex>
 
 #ifndef OBERROR
 #define OBERROR
@@ -133,7 +134,7 @@ namespace OpenBabel
       unsigned int GetMaxLogEntries() { return _maxEntries; }
 
       //! Clear the current message log entirely
-      void ClearLog() { _messageList.clear(); }
+      void ClearLog() { std::lock_guard<std::mutex> lock(_mutex); _messageList.clear(); }
 
       //! \brief Set the level of messages to output
       //! (i.e., messages with at least this priority will be output)
@@ -165,6 +166,8 @@ namespace OpenBabel
     protected:
       //! Log of messages for later retrieval via GetMessagesOfLevel()
       std::deque<OBError>    _messageList;
+      //! Mutex to protect message list and counters in multi-threaded use
+      mutable std::mutex     _mutex;
 
       //! Filtering level for messages and logging (messages of lower priority will be ignored
       obMessageLevel         _outputLevel;

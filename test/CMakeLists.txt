@@ -20,7 +20,7 @@ set(cpptests
   cistrans conversion graphsym gzip addh
   implicitH lssr isomorphism multicml periodic regressions rotor shuffle smiles spectrophore
   squareplanar stereo stereoperception tautomer tetrahedral
-  tetranonplanar tetraplanar uniqueid
+  tetranonplanar tetraplanar threading_accuracy uniqueid
 )
 set(alias_parts 1)
 set(automorphism_parts 1 2 3 4 5 6 7 8 9 10)
@@ -52,6 +52,7 @@ set(tautomer_parts 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 2
 set(tetrahedral_parts 1 2 3 4 5)
 set(tetranonplanar_parts 1)
 set(tetraplanar_parts 1)
+set(threading_accuracy_parts 0 1 2 3 4 5)
 set(uniqueid_parts 1 2)
 
 if(EIGEN2_FOUND OR EIGEN3_FOUND)
