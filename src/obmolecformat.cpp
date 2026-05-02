@@ -26,6 +26,7 @@ GNU General Public License for more details.
 using namespace std;
 namespace OpenBabel
 {
+  std::mutex OBMoleculeFormat::ClassMutex;
   bool OBMoleculeFormat::OptionsRegistered=false;
   std::map<std::string, OBMol*> OBMoleculeFormat::IMols;
   OBMol* OBMoleculeFormat::_jmol;
@@ -46,6 +47,7 @@ namespace OpenBabel
     bool ret=true;
    if(pConv->IsOption("separate",OBConversion::GENOPTIONS))
    {
+     std::lock_guard<std::mutex> lock(ClassMutex);
      //On first call, separate molecule and put fragments in MolArray.
      //On subsequent calls, remove a fragment from MolArray and send it for writing
      //Done this way so that each fragment can be written to its own file (with -m option)
@@ -112,6 +114,7 @@ namespace OpenBabel
       if(ptmol && (pConv->IsOption("j",OBConversion::GENOPTIONS)
                 || pConv->IsOption("join",OBConversion::GENOPTIONS)))
       {
+        std::lock_guard<std::mutex> lock(ClassMutex);
         //With j option, accumulate all mols in one stored in this class
         if(pConv->IsFirstInput())
           _jmol = new OBMol;
@@ -139,6 +142,7 @@ namespace OpenBabel
     if(pConv->IsOption("j",OBConversion::GENOPTIONS)
         || pConv->IsOption("join",OBConversion::GENOPTIONS))
       {
+        std::lock_guard<std::mutex> lock(ClassMutex);
         //arrives here at the end of a file
         if(!pConv->IsLast())
           return true;
@@ -219,6 +223,7 @@ namespace OpenBabel
   */
   bool OBMoleculeFormat::DeferMolOutput(OBMol* pmol, OBConversion* pConv, OBFormat* pF )
   {
+    std::lock_guard<std::mutex> lock(ClassMutex);
     static bool IsFirstFile;
     bool OnlyMolsInFirstFile=true;
 
@@ -379,6 +384,7 @@ namespace OpenBabel
 
   bool OBMoleculeFormat::OutputDeferredMols(OBConversion* pConv)
   {
+    std::lock_guard<std::mutex> lock(ClassMutex);
     std::map<std::string, OBMol*>::iterator itr, lastitr;
     bool ret=false;
     int i=1;
@@ -405,6 +411,7 @@ namespace OpenBabel
 
   bool OBMoleculeFormat::DeleteDeferredMols()
   {
+    std::lock_guard<std::mutex> lock(ClassMutex);
     //Empties IMols, deteting the OBMol objects whose pointers are stored there
     std::map<std::string, OBMol*>::iterator itr;
     for(itr=IMols.begin();itr!=IMols.end();++itr)

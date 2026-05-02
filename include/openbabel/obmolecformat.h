@@ -21,6 +21,7 @@ GNU General Public License for more details.
 
 #include <ciso646>  // detect std::lib
 #include <unordered_map>
+#include <mutex>
 
 #include <openbabel/babelconfig.h>
 #include <openbabel/obconversion.h>
@@ -141,6 +142,7 @@ public:
 
 private:
 
+  static std::mutex ClassMutex;
   static bool OptionsRegistered;
   static std::map<std::string, OBMol*> IMols;
   static OBMol* _jmol; //!< Accumulates molecules with the -j option

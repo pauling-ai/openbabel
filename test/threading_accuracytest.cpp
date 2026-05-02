@@ -19,6 +19,7 @@ the Free Software Foundation version 2 of the License.
 #include <string>
 #include <thread>
 #include <mutex>
+#include <atomic>
 #include <cmath>
 
 #include "obtest.h"
@@ -65,15 +66,18 @@ static void testBareThreads()
 {
   const unsigned n = 4;
   vector<thread> threads;
-  vector<int> results(n, 0);
+  std::atomic<int> results[4];
+  for (unsigned i = 0; i < n; ++i) {
+    results[i].store(0);
+  }
   for (unsigned i = 0; i < n; ++i) {
     threads.emplace_back([&, i]() {
-      results[i] = i * 2;
+      results[i].store(i * 2);
     });
   }
   for (auto& t : threads) t.join();
   for (unsigned i = 0; i < n; ++i) {
-    OB_COMPARE(results[i], (int)(i * 2));
+    OB_COMPARE(results[i].load(), (int)(i * 2));
   }
   SAFE_COUT("ok 0 - bare threads");
 }
@@ -85,19 +89,22 @@ static void testConversionPerThread()
 {
   const unsigned n = 4;
   vector<thread> threads;
-  vector<bool> results(n, false);
+  std::atomic<bool> results[4];
+  for (unsigned i = 0; i < n; ++i) {
+    results[i].store(false);
+  }
   for (unsigned i = 0; i < n; ++i) {
     threads.emplace_back([&, i]() {
       OBConversion c;
       c.SetInAndOutFormats("SMI", "CAN");
       OBMol mol;
       bool ok = c.ReadString(&mol, "c1ccccc1");
-      results[i] = ok;
+      results[i].store(ok);
     });
   }
   for (auto& t : threads) t.join();
   for (unsigned i = 0; i < n; ++i) {
-    OB_REQUIRE(results[i]);
+    OB_REQUIRE(results[i].load());
   }
   SAFE_COUT("ok 1 - OBConversion per thread");
 }
@@ -109,7 +116,10 @@ static void testAddHydrogensPerThread()
 {
   const unsigned n = 4;
   vector<thread> threads;
-  vector<int> h_counts(n, 0);
+  std::atomic<int> h_counts[4];
+  for (unsigned i = 0; i < n; ++i) {
+    h_counts[i].store(0);
+  }
   for (unsigned i = 0; i < n; ++i) {
     threads.emplace_back([&, i]() {
       OBConversion c;
@@ -117,13 +127,13 @@ static void testAddHydrogensPerThread()
       OBMol mol;
       if (c.ReadString(&mol, "c1ccccc1")) {
         mol.AddHydrogens();
-        h_counts[i] = mol.NumAtoms();
+        h_counts[i].store(mol.NumAtoms());
       }
     });
   }
   for (auto& t : threads) t.join();
   for (unsigned i = 0; i < n; ++i) {
-    OB_COMPARE(h_counts[i], 12); // benzene + 6 H = 12 atoms
+    OB_COMPARE(h_counts[i].load(), 12); // benzene + 6 H = 12 atoms
   }
   SAFE_COUT("ok 2 - AddHydrogens per thread");
 }
