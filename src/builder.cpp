@@ -74,6 +74,8 @@ namespace OpenBabel
   std::map<std::string, int> OBBuilder::_rigid_fragments_index;
   std::map<std::string, std::vector<vector3> > OBBuilder::_rigid_fragments_cache;
   std::vector<std::pair<OBSmartsPattern*, std::vector<vector3> > > OBBuilder::_ring_fragments;
+  std::once_flag OBBuilder::_fragmentsLoaded;
+  std::mutex OBBuilder::_fragmentsCacheMutex;
 
   void OBBuilder::AddRingFragment(OBSmartsPattern *sp, const std::vector<vector3> &coords)
   {
@@ -162,8 +164,12 @@ namespace OpenBabel
   }
 
   std::vector<vector3> OBBuilder::GetFragmentCoord(std::string smiles) {
-    if (_rigid_fragments_cache.count(smiles) > 0) {
-      return _rigid_fragments_cache[smiles];
+    {
+      std::lock_guard<std::mutex> lock(_fragmentsCacheMutex);
+      auto it = _rigid_fragments_cache.find(smiles);
+      if (it != _rigid_fragments_cache.end()) {
+        return it->second;
+      }
     }
 
     std::vector<vector3> coords;
@@ -202,6 +208,10 @@ namespace OpenBabel
       obErrorLog.ThrowError(__FUNCTION__, ss.str(), obError);
     }
 
+    {
+      std::lock_guard<std::mutex> lock(_fragmentsCacheMutex);
+      _rigid_fragments_cache[smiles] = coords;
+    }
     return coords;
   }
 
@@ -1133,8 +1143,7 @@ namespace OpenBabel
     vector<OBMol> fragments = mol_copy.Separate();
 
     // datafile is read only on first use of Build()
-    if(_rigid_fragments.empty())
-      LoadFragments();
+    std::call_once(_fragmentsLoaded, []() { OBBuilder().LoadFragments(); });
 
 
     for(vector<OBMol>::iterator f = fragments.begin(); f != fragments.end(); ++f) {

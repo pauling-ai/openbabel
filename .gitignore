@@ -12,6 +12,7 @@ external
 build
 build-static
 build_tsan
+build_openmp
 
 # install
 install

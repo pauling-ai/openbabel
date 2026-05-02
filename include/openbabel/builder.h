@@ -23,6 +23,7 @@ GNU General Public License for more details.
 #include <vector>
 #include <string>
 #include <map>
+#include <mutex>
 
 #include <list>
 #include <set>
@@ -170,6 +171,8 @@ namespace OpenBabel
       static std::vector<std::pair<OBSmartsPattern*, std::vector<vector3> > > _ring_fragments;
       static std::map<std::string, int> _rigid_fragments_index;
       static std::map<std::string, std::vector<vector3> > _rigid_fragments_cache;
+      static std::once_flag _fragmentsLoaded;
+      static std::mutex _fragmentsCacheMutex;
       //! Connect a ring fragment to an already matched fragment. Currently only
       //  supports the case where the fragments overlap at a spiro atom only.
       static void ConnectFrags(OBMol &mol, OBMol &workmol, std::vector<int> match, std::vector<vector3> coords,
