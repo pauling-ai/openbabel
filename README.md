@@ -19,6 +19,11 @@ chemistry, solid-state materials, biochemistry, or related areas.
   organic chemistry, inorganic chemistry, solid-state materials,
   nuclear chemistry...
 
+**Thread Safety:** This fork includes comprehensive multi-threading
+fixes. Independent `OBConversion` instances and forcefields (via
+`MakeNewInstance()`) can be used safely from multiple threads.
+See `THREADING.md` for details and usage patterns.
+
 Open Babel is distributed under the GNU General Public License (GPL).
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
