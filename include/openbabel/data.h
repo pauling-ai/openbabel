@@ -28,6 +28,7 @@ GNU General Public License for more details.
 #include <vector>
 #include <string>
 #include <cstring>
+#include <mutex>
 
 namespace OpenBabel
 {
@@ -190,6 +191,7 @@ namespace OpenBabel
       int             _from,_to;
       std::vector<std::string> _colnames;
       std::vector<std::vector<std::string> > _table;
+      mutable std::recursive_mutex _mutex;
 
     public:
 
@@ -213,6 +215,9 @@ namespace OpenBabel
       //! Translate atom types
       //! \return the translated atom type, or an empty string if not possible
       std::string Translate(const std::string &from);
+      //! Thread-safe translate with explicit from/to type names
+      bool Translate(std::string &to, const std::string &from,
+                     const std::string &from_type, const std::string &to_type);
 
       //! \return the initial atom type to be translated
       std::string GetFromType();
@@ -222,7 +227,7 @@ namespace OpenBabel
 
   //! Global OBTypeTable for translating between different atom types
   //! (e.g., Sybyl <-> MM2)
-  OB_EXTERN  OBTypeTable      ttab;
+  OB_EXTERN OBTypeTable      ttab;
 
   /** \class OBResidueData data.h <openbabel/data.h>
       \brief Table of common biomolecule residues (for PDB or other files).
@@ -239,6 +244,7 @@ namespace OpenBabel
       //variables used only temporarily for parsing resdata.txt
       std::vector<std::string>                          _vatmtmp;
       std::vector<std::pair<std::string,int> >          _vtmp;
+      mutable std::recursive_mutex _mutex;
     public:
 
       OBResidueData();
@@ -268,7 +274,7 @@ namespace OpenBabel
     };
 
   //! Global OBResidueData biomolecule residue database
-  OB_EXTERN  OBResidueData    resdat;
+  OB_EXTERN OBResidueData    resdat;
 
 
 } // end namespace OpenBabel

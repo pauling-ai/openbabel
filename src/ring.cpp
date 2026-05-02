@@ -33,7 +33,7 @@ using namespace std;
 
 namespace OpenBabel
 {
-  OBRingTyper      ringtyper;
+  thread_local OBRingTyper ringtyper;
 
   /*! \class OBRing ring.h <openbabel/ring.h>
     \brief Stores information on rings in a molecule from SSSR perception.

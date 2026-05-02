@@ -270,7 +270,6 @@ namespace OpenBabel
     bool has_explicit_hydrogen = false;
     bool has_residue_information = false;
 
-    ttab.SetFromType("SYB");
     for (i = 0;i < natoms;i++)
       {
         if (!ifs.getline(buffer,BUFF_SIZE))
@@ -308,10 +307,8 @@ namespace OpenBabel
           atom.SetFormalCharge(1);
         }
 
-        ttab.SetToType("ATN");
-        ttab.Translate(str1,str);
+        ttab.Translate(str1, str, "SYB", "ATN");
         elemno = atoi(str1.c_str());
-        ttab.SetToType("IDX");
 
         // We might have missed some SI or FE type things above, so here's
         // another check
@@ -319,10 +316,8 @@ namespace OpenBabel
           {
             temp_type[1] = (char)tolower(temp_type[1]);
             str = temp_type;
-            ttab.SetToType("ATN");
-            ttab.Translate(str1,str);
+            ttab.Translate(str1, str, "SYB", "ATN");
             elemno = atoi(str1.c_str());
-            ttab.SetToType("IDX");
           }
         // One last check if there isn't a period in the type,
         // it's a malformed atom type, but it may be the element symbol
@@ -357,8 +352,7 @@ namespace OpenBabel
           atom.SetIsotope(isotope);
         else if (elemno == 1)
           has_explicit_hydrogen = true;
-        ttab.SetToType("INT");
-        ttab.Translate(str1,str);
+        ttab.Translate(str1, str, "SYB", "INT");
         atom.SetType(str1);
         atom.SetPartialCharge(pcharge);
         // MMFF94 has different atom types for Cu(I) and Cu(II)
@@ -682,9 +676,6 @@ namespace OpenBabel
     vector<OBAtom*>::iterator i;
     std::map<int, int> labelcount;
 
-    ttab.SetFromType("INT");
-    ttab.SetToType("SYB");
-
     bool hasFormalCharges = false;
     for (atom = mol.BeginAtom(i);atom;atom = mol.NextAtom(i))
       {
@@ -700,7 +691,7 @@ namespace OpenBabel
         strcpy(rnum,"1");
 
         str = atom->GetType();
-        ttab.Translate(str1,str);
+        ttab.Translate(str1, str, "INT", "SYB");
 
         if (atom->GetFormalCharge() != 0) hasFormalCharges = true;
         //

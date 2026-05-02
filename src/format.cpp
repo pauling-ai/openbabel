@@ -30,6 +30,7 @@ namespace OpenBabel
 
 int OBFormat::RegisterFormat(const char* ID, const char* MIME)
 {
+  std::lock_guard<std::recursive_mutex> lock(PluginMutex);
   GetMap()[ID] = this;
   if (MIME)
     FormatsMIMEMap()[MIME] = this;
@@ -65,6 +66,7 @@ const type_info& OBFormat::GetType()
 //////////////////////////////////////////////////////////
 OBFormat* OBFormat::FormatFromMIME(const char* MIME)
 {
+  std::lock_guard<std::recursive_mutex> lock(PluginMutex);
   if(FormatsMIMEMap().find(MIME) == FormatsMIMEMap().end())
     return nullptr;
   else

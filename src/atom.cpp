@@ -475,16 +475,11 @@ namespace OpenBabel
     if (strlen(_type) == 0) // Somehow we still don't have a type!
       {
         char num[6];
-        string fromType = ttab.GetFromType(); // save previous types
-        string toType = ttab.GetToType();
-
-        ttab.SetFromType("ATN");
-        ttab.SetToType("INT");
         snprintf(num, 6, "%d", GetAtomicNum());
-        ttab.Translate(_type, num);
-
-        ttab.SetFromType(fromType.c_str());
-        ttab.SetToType(toType.c_str());
+        string translated;
+        ttab.Translate(translated, num, "ATN", "INT");
+        strncpy(_type, translated.c_str(), sizeof(_type) - 1);
+        _type[sizeof(_type) - 1] = '\0';
       }
     if (_ele == 1 && _isotope == 2)
       snprintf(_type, 6, "%s", "D");

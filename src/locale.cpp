@@ -18,6 +18,7 @@ GNU General Public License for more details.
 
 #include <cstdlib>
 #include <cstring>
+#include <mutex>
 #include <openbabel/locale.h>
 
 #if HAVE_XLOCALE_H
@@ -34,9 +35,9 @@ namespace OpenBabel
     char *old_locale_string;
 #if HAVE_USELOCALE
     locale_t new_c_num_locale;
-    locale_t old_locale;
 #endif
     unsigned int counter; // Reference counter -- ensures balance in SetLocale/RestoreLocale calls
+    std::mutex mutex;     // Protects counter and locale state in multi-threaded use
 
     OBLocalePrivate(): counter(0)
     {
@@ -89,14 +90,22 @@ namespace OpenBabel
     }
   }
 
+#if HAVE_USELOCALE
+  static thread_local locale_t tl_old_locale = nullptr;
+  static thread_local int tl_counter = 0;
+#endif
+
   void OBLocale::SetLocale()
   {
-    if (d->counter == 0) {
-      // Set the locale for number parsing to avoid locale issues: PR#1785463
 #if HAVE_USELOCALE
-      // Extended per-thread interface
-      d->old_locale = uselocale(d->new_c_num_locale);
+    // uselocale is per-thread; use thread-local counter and old_locale
+    if (tl_counter == 0) {
+      tl_old_locale = uselocale(d->new_c_num_locale);
+    }
+    ++tl_counter;
 #else
+    std::lock_guard<std::mutex> lock(d->mutex);
+    if (d->counter == 0) {
 #ifndef ANDROID
       // Original global POSIX interface
       // regular UNIX, no USELOCALE, no ANDROID
@@ -106,27 +115,29 @@ namespace OpenBabel
       d->old_locale_string = "C";
 #endif
   	  setlocale(LC_NUMERIC, "C");
-#endif
     }
-
     ++d->counter;
+#endif
   }
 
   void OBLocale::RestoreLocale()
   {
+#if HAVE_USELOCALE
+    --tl_counter;
+    if (tl_counter == 0) {
+      uselocale(tl_old_locale);
+    }
+#else
+    std::lock_guard<std::mutex> lock(d->mutex);
     --d->counter;
     if(d->counter == 0) {
-      // return the locale to the original one
-#ifdef HAVE_USELOCALE
-      uselocale(d->old_locale);
-#else
       setlocale(LC_NUMERIC, d->old_locale_string);
 #ifndef ANDROID
       // Don't free on Android because "C" is a static ctring constant
       free (d->old_locale_string);
 #endif
-#endif
     }
+#endif
   }
 
   //global definitions

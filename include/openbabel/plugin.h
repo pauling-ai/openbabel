@@ -27,6 +27,7 @@ General Public License for more details.
 #include <map>
 #include <sstream>
 #include <cstring>
+#include <mutex>
 
 #ifndef OBERROR
  #define OBERROR
@@ -138,6 +139,9 @@ protected:
 
   ///Keep a record if all plugins have been loaded
   static int AllPluginsLoaded;
+
+  ///Mutex to protect plugin map access in multi-threaded use
+  static std::recursive_mutex PluginMutex;
 
   ///Returns the map of a particular plugin type, e.g. GetMapType("fingerprints")
   static PluginMapType& GetTypeMap(const char* PluginID);

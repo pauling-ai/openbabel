@@ -284,6 +284,7 @@ namespace OpenBabel
 
   bool OBTypeTable::SetFromType(const char* from)
   {
+    std::lock_guard<std::recursive_mutex> lock(_mutex);
     if (!_init)
       Init();
 
@@ -304,6 +305,7 @@ namespace OpenBabel
 
   bool OBTypeTable::SetToType(const char* to)
   {
+    std::lock_guard<std::recursive_mutex> lock(_mutex);
     if (!_init)
       Init();
 
@@ -329,6 +331,7 @@ namespace OpenBabel
   OB_DEPRECATED_MSG("you should consider using std::string instead")
   bool OBTypeTable::Translate(char *to, const char *from)
   {
+    std::lock_guard<std::recursive_mutex> lock(_mutex);
     if (!_init)
       Init();
 
@@ -344,6 +347,7 @@ namespace OpenBabel
 
   bool OBTypeTable::Translate(string &to, const string &from)
   {
+    std::lock_guard<std::recursive_mutex> lock(_mutex);
     if (!_init)
       Init();
 
@@ -370,6 +374,7 @@ namespace OpenBabel
 
   std::string OBTypeTable::Translate(const string &from)
   {
+    std::lock_guard<std::recursive_mutex> lock(_mutex);
     if (!_init)
       Init();
 
@@ -392,8 +397,44 @@ namespace OpenBabel
     return("");
   }
 
+  bool OBTypeTable::Translate(string &to, const string &from,
+                              const string &from_type, const string &to_type)
+  {
+    std::lock_guard<std::recursive_mutex> lock(_mutex);
+    if (!_init)
+      Init();
+
+    int from_col = -1, to_col = -1;
+    for (unsigned int i = 0; i < _colnames.size(); ++i) {
+      if (_colnames[i] == from_type) from_col = i;
+      if (_colnames[i] == to_type) to_col = i;
+    }
+    if (from_col < 0 || to_col < 0) {
+      obErrorLog.ThrowError(__FUNCTION__, "Requested type column not found", obInfo);
+      to = from;
+      return false;
+    }
+
+    if (from.empty()) {
+      to = "";
+      return false;
+    }
+
+    for (auto &row : _table) {
+      if ((signed)row.size() > from_col && row[from_col] == from) {
+        to = row[to_col];
+        return true;
+      }
+    }
+
+    obErrorLog.ThrowError(__FUNCTION__, "Cannot perform atom type translation: table cannot find requested types.", obWarning);
+    to = from;
+    return false;
+  }
+
   std::string OBTypeTable::GetFromType()
   {
+    std::lock_guard<std::recursive_mutex> lock(_mutex);
     if (!_init)
       Init();
 
@@ -405,6 +446,7 @@ namespace OpenBabel
 
   std::string OBTypeTable::GetToType()
   {
+    std::lock_guard<std::recursive_mutex> lock(_mutex);
     if (!_init)
       Init();
 
@@ -441,6 +483,7 @@ namespace OpenBabel
 
   bool OBResidueData::AssignBonds(OBMol &mol)
   {
+    std::lock_guard<std::recursive_mutex> lock(_mutex);
     if (!_init)
       Init();
 
@@ -599,6 +642,7 @@ namespace OpenBabel
 
   bool OBResidueData::SetResName(const string &s)
   {
+    std::lock_guard<std::recursive_mutex> lock(_mutex);
     if (!_init)
       Init();
 
@@ -617,6 +661,7 @@ namespace OpenBabel
 
   int OBResidueData::LookupBO(const string &s)
   {
+    std::lock_guard<std::recursive_mutex> lock(_mutex);
     if (_resnum == -1)
       return(0);
 
@@ -630,6 +675,7 @@ namespace OpenBabel
 
   int OBResidueData::LookupBO(const string &s1, const string &s2)
   {
+    std::lock_guard<std::recursive_mutex> lock(_mutex);
     if (_resnum == -1)
       return(0);
     string s;
@@ -646,6 +692,7 @@ namespace OpenBabel
 
   bool OBResidueData::LookupType(const string &atmid,string &type,int &hyb)
   {
+    std::lock_guard<std::recursive_mutex> lock(_mutex);
     if (_resnum == -1)
       return(false);
 

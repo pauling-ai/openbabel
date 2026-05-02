@@ -26,6 +26,7 @@ GNU General Public License for more details.
 
 #include <openbabel/babelconfig.h>
 #include <vector>
+#include <mutex>
 
 namespace OpenBabel
 {
@@ -263,6 +264,7 @@ namespace OpenBabel
        * Debugging function.
        */
       void DumpState();
+      mutable std::recursive_mutex _mutex;
 
       void *PDecisionTree; //!< ByteCode decision tree for peptides
       void *NDecisionTree; //!< ByteCode decision tree for nucleotides

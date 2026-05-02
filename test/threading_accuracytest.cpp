@@ -24,6 +24,7 @@ the Free Software Foundation version 2 of the License.
 #include "obtest.h"
 
 #include <openbabel/mol.h>
+#include <openbabel/obiter.h>
 #include <openbabel/obconversion.h>
 #include <openbabel/forcefield.h>
 
@@ -78,23 +79,17 @@ static void testBareThreads()
 }
 
 // ----------------------------------------------------------------------
-// Diagnostic: OBConversion per thread (no registry lookup)
+// Diagnostic: OBConversion per thread (with registry lookup)
 // ----------------------------------------------------------------------
 static void testConversionPerThread()
 {
-  OBConversion conv;
-  OBFormat* pIn = conv.FindFormat("SMI");
-  OBFormat* pOut = conv.FindFormat("CAN");
-  OB_REQUIRE(pIn != nullptr);
-  OB_REQUIRE(pOut != nullptr);
-
   const unsigned n = 4;
   vector<thread> threads;
   vector<bool> results(n, false);
   for (unsigned i = 0; i < n; ++i) {
-    threads.emplace_back([&, i, pIn, pOut]() {
+    threads.emplace_back([&, i]() {
       OBConversion c;
-      c.SetInAndOutFormats(pIn, pOut);
+      c.SetInAndOutFormats("SMI", "CAN");
       OBMol mol;
       bool ok = c.ReadString(&mol, "c1ccccc1");
       results[i] = ok;
@@ -112,17 +107,13 @@ static void testConversionPerThread()
 // ----------------------------------------------------------------------
 static void testAddHydrogensPerThread()
 {
-  OBConversion conv;
-  OBFormat* pIn = conv.FindFormat("SMI");
-  OB_REQUIRE(pIn != nullptr);
-
   const unsigned n = 4;
   vector<thread> threads;
   vector<int> h_counts(n, 0);
   for (unsigned i = 0; i < n; ++i) {
-    threads.emplace_back([&, i, pIn]() {
+    threads.emplace_back([&, i]() {
       OBConversion c;
-      c.SetInFormat(pIn);
+      c.SetInFormat("SMI");
       OBMol mol;
       if (c.ReadString(&mol, "c1ccccc1")) {
         mol.AddHydrogens();
@@ -142,19 +133,13 @@ static void testAddHydrogensPerThread()
 // ----------------------------------------------------------------------
 static void testCanonicalWritePerThread()
 {
-  OBConversion conv;
-  OBFormat* pIn = conv.FindFormat("SMI");
-  OBFormat* pOut = conv.FindFormat("CAN");
-  OB_REQUIRE(pIn != nullptr);
-  OB_REQUIRE(pOut != nullptr);
-
   const unsigned n = 4;
   vector<thread> threads;
   vector<string> outputs(n);
   for (unsigned i = 0; i < n; ++i) {
-    threads.emplace_back([&, i, pIn, pOut]() {
+    threads.emplace_back([&, i]() {
       OBConversion c;
-      c.SetInAndOutFormats(pIn, pOut);
+      c.SetInAndOutFormats("SMI", "CAN");
       OBMol mol;
       if (c.ReadString(&mol, "c1ccccc1")) {
         mol.AddHydrogens();

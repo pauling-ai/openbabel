@@ -26,16 +26,17 @@ using namespace std;
 namespace OpenBabel
 {
 
+std::recursive_mutex OBPlugin::PluginMutex;
+
 OBPlugin::PluginMapType& OBPlugin::GetTypeMap(const char* PluginID)
 {
-  PluginMapType::iterator itr;
-
-  // Make sure the plugins are loaded
+  // Make sure the plugins are loaded (must be outside the lock to avoid deadlock)
   if (AllPluginsLoaded == 0) {
     OBPlugin::LoadAllPlugins();
   }
 
-  itr = PluginMap().find(PluginID);
+  std::lock_guard<std::recursive_mutex> lock(PluginMutex);
+  PluginMapType::iterator itr = PluginMap().find(PluginID);
   if(itr!=PluginMap().end())
     return itr->second->GetMap();
   return PluginMap();//error: type not found; return plugins map
@@ -45,40 +46,48 @@ int OBPlugin::AllPluginsLoaded = 0;
 
 void OBPlugin::LoadAllPlugins()
 {
-  int count = 0;
+  {
+    std::lock_guard<std::recursive_mutex> lock(PluginMutex);
+    if (AllPluginsLoaded != 0)
+      return;
+
+    int count = 0;
 #if  defined(USING_DYNAMIC_LIBS)
-  // Depending on availability, look successively in
-  // FORMATFILE_DIR, executable directory or current directory
-  string TargetDir;
+    // Depending on availability, look successively in
+    // FORMATFILE_DIR, executable directory or current directory
+    string TargetDir;
 
 #ifdef FORMATFILE_DIR
-  TargetDir="FORMATFILE_DIR";
+    TargetDir="FORMATFILE_DIR";
 #endif
 
-  DLHandler::getConvDirectory(TargetDir);
+    DLHandler::getConvDirectory(TargetDir);
 
-  vector<string> files;
-  if(!DLHandler::findFiles(files,DLHandler::getFormatFilePattern(),TargetDir)) {
-    obErrorLog.ThrowError(__FUNCTION__, "Unable to find OpenBabel plugins. Try setting the BABEL_LIBDIR environment variable.", obError);
-    return;
-  }
+    vector<string> files;
+    if(!DLHandler::findFiles(files,DLHandler::getFormatFilePattern(),TargetDir)) {
+      obErrorLog.ThrowError(__FUNCTION__, "Unable to find OpenBabel plugins. Try setting the BABEL_LIBDIR environment variable.", obError);
+      AllPluginsLoaded = -1; // Mark as attempted to avoid repeated errors
+      return;
+    }
 
-  vector<string>::iterator itr;
-  for(itr=files.begin();itr!=files.end();++itr) {
-    if(DLHandler::openLib(*itr))
-      count++;
-  }
-  if(!count) {
-    string error = "No valid OpenBabel plugs found in "+TargetDir;
-    obErrorLog.ThrowError(__FUNCTION__, error, obError);
-    return;
-  }
+    vector<string>::iterator itr;
+    for(itr=files.begin();itr!=files.end();++itr) {
+      if(DLHandler::openLib(*itr))
+        count++;
+    }
+    if(!count) {
+      string error = "No valid OpenBabel plugs found in "+TargetDir;
+      obErrorLog.ThrowError(__FUNCTION__, error, obError);
+      AllPluginsLoaded = -1; // Mark as attempted to avoid repeated errors
+      return;
+    }
 #else
-  count = 1; // Avoid calling this function several times
+    count = 1; // Avoid calling this function several times
 #endif //USING_DYNAMIC_LIBS
 
-  // Status have to be updated now
-  AllPluginsLoaded = count;
+    // Status have to be updated now
+    AllPluginsLoaded = count;
+  } // Release mutex before calling GetPlugin to avoid deadlock
 
   // Make instances for plugin classes defined in the data file.
   // This is hook for OBDefine, but does nothing if it is not loaded
@@ -96,13 +105,15 @@ void OBPlugin::LoadAllPlugins()
 
 OBPlugin* OBPlugin::BaseFindType(PluginMapType& Map, const char* ID)
 {
-  // Make sure the plugins are loaded
+  // Make sure the plugins are loaded (must be outside the lock to avoid deadlock)
   if (AllPluginsLoaded == 0) {
     OBPlugin::LoadAllPlugins();
   }
 
   if(!ID || !*ID)
     return nullptr;
+
+  std::lock_guard<std::recursive_mutex> lock(PluginMutex);
   PluginMapType::iterator itr = Map.find(ID);
   if(itr==Map.end())
     return nullptr;
@@ -112,14 +123,15 @@ OBPlugin* OBPlugin::BaseFindType(PluginMapType& Map, const char* ID)
 
 OBPlugin* OBPlugin::GetPlugin(const char* Type, const char* ID)
 {
-  if (Type != nullptr)
-    return BaseFindType(GetTypeMap(Type), ID);
-
-  // Make sure the plugins are loaded
+  // Make sure the plugins are loaded (must be outside the lock to avoid deadlock)
   if (AllPluginsLoaded == 0) {
     OBPlugin::LoadAllPlugins();
   }
 
+  if (Type != nullptr)
+    return BaseFindType(GetTypeMap(Type), ID);
+
+  std::lock_guard<std::recursive_mutex> lock(PluginMutex);
   //When Type==NULL, search all types for matching ID and stop when found
   PluginMapType::iterator itr;
   for(itr=PluginMap().begin();itr!= PluginMap().end();++itr)
@@ -141,6 +153,7 @@ bool OBPlugin::ListAsVector(const char* PluginID, const char* param, vector<stri
     LoadAllPlugins();
   }
 
+  std::lock_guard<std::recursive_mutex> lock(PluginMutex);
   if(PluginID)
   {
     if(*PluginID!=0 && strcmp(PluginID, "plugins"))

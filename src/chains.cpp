@@ -956,6 +956,7 @@ namespace OpenBabel
 
   bool OBChainsParser::PerceiveChains(OBMol &mol, bool nukeSingleResidue)
   {
+    std::lock_guard<std::recursive_mutex> lock(_mutex);
     bool result = true;
     unsigned int idx;
 
