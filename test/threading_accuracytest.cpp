@@ -13,6 +13,7 @@ the Free Software Foundation version 2 of the License.
 ***********************************************************************/
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <vector>
