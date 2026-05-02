@@ -25,6 +25,7 @@ GNU General Public License for more details.
 #include <openbabel/oberror.h>
 #include "../stereo/gen3dstereohelper.h"
 
+#include <memory>
 #include <cstdlib> // needed for strtol and gcc 4.8
 
 namespace OpenBabel
