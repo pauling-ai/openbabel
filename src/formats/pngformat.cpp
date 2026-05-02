@@ -124,7 +124,7 @@ public:
 
   const char* TargetClassDescription() override
   {
-    static string txt;
+    thread_local static string txt;
     txt = " PNG_files\n"; //so reports "n PNG_files converted"
     txt += OBFormat::TargetClassDescription(); //to display OBMol options in GUI
     return txt.c_str();

@@ -11,6 +11,7 @@ external
 # build
 build
 build-static
+build_tsan
 
 # install
 install

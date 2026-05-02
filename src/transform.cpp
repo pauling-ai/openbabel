@@ -246,7 +246,7 @@ namespace OpenBabel
   ///////////////////////////////////////////////////
   const char* OBMol::ClassDescription()
   {
-    static string ret;
+    thread_local static string ret;
     ret = "For conversions of molecules\n"
 "Additional options :\n"
 "-d Delete hydrogens (make implicit)\n"

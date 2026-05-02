@@ -62,7 +62,7 @@ public:
 /////////////////////////////////////////////////////////////////////////////
   const char* Description() override
   {
-    static string desc;
+    thread_local static string desc;
     //Read patterns file if it has not been done already,
     //because we need _bitcount and _version updated
 

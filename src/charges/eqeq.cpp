@@ -100,14 +100,18 @@ namespace OpenBabel
     OBAtom *atom;
 
     // If parameters have not yet been loaded, do that
-    if (!_paramFileLoaded)
+    if (!_paramFileLoaded.load())
     {
-      if (ParseParamFile())
+      std::lock_guard<std::mutex> lock(_paramFileMutex);
+      if (!_paramFileLoaded.load())
       {
-        _paramFileLoaded = true;
-      } else
-      {
-        return false;
+        if (ParseParamFile())
+        {
+          _paramFileLoaded.store(true);
+        } else
+        {
+          return false;
+        }
       }
     }
 

@@ -37,7 +37,7 @@ namespace OpenBabel
     const char* Description() override
     {
       //Adds the SMARTS string to the description
-      static string txt;
+      thread_local static string txt;
       txt =  _descr;
       txt += "\n\t SMARTS: ";
       txt += _smarts;

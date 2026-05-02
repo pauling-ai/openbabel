@@ -133,13 +133,23 @@ bool OpGen3D::Do(OBBase* pOb, const char* OptionText, OpMap* pOptions, OBConvers
 
     // All other speed levels do some FF cleanup
     // Try MMFF94 first and UFF if that doesn't work
-    OBForceField* pFF = OBForceField::FindForceField("MMFF94");
-    if (!pFF)
-      return true;
-    if (!pFF->Setup(molCopy)) {
-      pFF = OBForceField::FindForceField("UFF");
-      if (!pFF || !pFF->Setup(molCopy)) return true; // can't use either MMFF94 or UFF
+    std::unique_ptr<OBForceField> pFF;
+    OBForceField* pFFProto = OBForceField::FindForceField("MMFF94");
+    if (pFFProto) {
+      pFF.reset(pFFProto->MakeNewInstance());
+      if (!pFF || !pFF->Setup(molCopy)) {
+        pFF.reset();
+        pFFProto = OBForceField::FindForceField("UFF");
+        if (pFFProto) {
+          pFF.reset(pFFProto->MakeNewInstance());
+          if (!pFF || !pFF->Setup(molCopy)) {
+            pFF.reset();
+          }
+        }
+      }
     }
+    if (!pFF)
+      return true; // can't use either MMFF94 or UFF
 
     // Since we only want a rough geometry, use distance cutoffs for VDW, Electrostatics
     pFF->EnableCutOff(true);

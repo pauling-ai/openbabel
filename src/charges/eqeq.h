@@ -23,6 +23,8 @@ GNU General Public License for more details.
 #include <openbabel/mol.h>
 
 #include <math.h>
+#include <atomic>
+#include <mutex>
 
 #ifdef HAVE_EIGEN3
 
@@ -32,7 +34,8 @@ GNU General Public License for more details.
 #define TABLE_OF_ELEMENTS_SIZE 84 // Number of atoms in data/eqeqIonizations.txt
 #define PI 3.1415926535897932384626433832795 // 32 digits of pi
 
-static bool _paramFileLoaded = false; // Flipped after parameter file is loaded
+static std::atomic<bool> _paramFileLoaded{false}; // Flipped after parameter file is loaded
+static std::mutex _paramFileMutex;
 
 // The following constants are functionalized in EQeq's original implementation,
 // but rarely ever changed in practice.

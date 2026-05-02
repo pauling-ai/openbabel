@@ -17,6 +17,7 @@ General Public License for more details.
 ***********************************************************************/
 
 #include <openbabel/babelconfig.h>
+#include <atomic>
 #include <openbabel/plugin.h>
 #include <openbabel/oberror.h>
 
@@ -42,7 +43,7 @@ OBPlugin::PluginMapType& OBPlugin::GetTypeMap(const char* PluginID)
   return PluginMap();//error: type not found; return plugins map
 }
 
-int OBPlugin::AllPluginsLoaded = 0;
+std::atomic<int> OBPlugin::AllPluginsLoaded{0};
 
 void OBPlugin::LoadAllPlugins()
 {

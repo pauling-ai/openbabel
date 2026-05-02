@@ -38,6 +38,7 @@ GNU General Public License for more details.
 #include <sstream>
 #include <string>
 #include <map>
+#include <mutex>
 #include <locale>
 #include <limits>
 #include <typeinfo>
@@ -1663,6 +1664,8 @@ Additional options :
                                          int numberParams, Option_type typ)
   {
     //Gives error message if the number of parameters conflicts with an existing registration
+    static std::mutex opaMutex;
+    std::lock_guard<std::mutex> lock(opaMutex);
     map<string,int>::iterator pos;
     pos =	OptionParamArray(typ).find(name);
     if(pos!=OptionParamArray(typ).end())
@@ -1805,7 +1808,7 @@ Additional options :
         str = nullptr; pFormat = nullptr;
         return false;
       }
-    static string s;
+    thread_local static string s;
     s =itr->first;
     pFormat = static_cast<OBFormat*>(itr->second);
     if(pFormat)

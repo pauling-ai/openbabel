@@ -56,7 +56,7 @@ public:
 
   const char* Description() override
   {
-    static string txt;
+    thread_local static string txt;
     txt = _descr;
     txt += '\n';
     txt += _macroText;

@@ -60,7 +60,7 @@ namespace OpenBabel
   const char* OBGroupContrib::Description()
   {
    //Adds name of datafile containing SMARTS strings to the description
-    static string txt;
+    thread_local static string txt;
     txt =  _descr;
     txt += "\n Datafile: ";
     txt += _filename;

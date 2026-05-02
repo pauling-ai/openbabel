@@ -56,11 +56,17 @@ MMFF94Charges theMMFF94Charges("mmff94"); //Global instance
     dp->SetOrigin(perceived);
     mol.SetData(dp);
 
-    OBForceField* pFF = OBForceField::FindForceField("MMFF94");
-    if (!pFF || !pFF->Setup(mol))
+    OBForceField* pFFProto = OBForceField::FindForceField("MMFF94");
+    if (!pFFProto)
       return false;
+    OBForceField* pFF = pFFProto->MakeNewInstance();
+    if (!pFF || !pFF->Setup(mol)) {
+      delete pFF;
+      return false;
+    }
 
     pFF->GetPartialCharges(mol);
+    delete pFF;
     m_partialCharges.clear();
     m_partialCharges.reserve(mol.NumAtoms());
     m_formalCharges.clear();

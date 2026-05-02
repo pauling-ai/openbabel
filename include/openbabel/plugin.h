@@ -27,6 +27,7 @@ General Public License for more details.
 #include <map>
 #include <sstream>
 #include <cstring>
+#include <atomic>
 #include <mutex>
 
 #ifndef OBERROR
@@ -138,7 +139,7 @@ protected:
   }
 
   ///Keep a record if all plugins have been loaded
-  static int AllPluginsLoaded;
+  static std::atomic<int> AllPluginsLoaded;
 
   ///Mutex to protect plugin map access in multi-threaded use
   static std::recursive_mutex PluginMutex;
