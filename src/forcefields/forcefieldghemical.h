@@ -138,7 +138,22 @@ namespace OpenBabel
       //!Clone the current instance. May be desirable in multithreaded environments
       OBForceFieldGhemical* MakeNewInstance() override
       {
-        return new OBForceFieldGhemical(_id, false);
+        static std::once_flag once;
+        std::call_once(once, [this]() {
+          if (!_init) {
+            ParseParamFile();
+            _init = true;
+          }
+        });
+        OBForceFieldGhemical* copy = new OBForceFieldGhemical(_id, false);
+        copy->_ffbondparams = _ffbondparams;
+        copy->_ffangleparams = _ffangleparams;
+        copy->_fftorsionparams = _fftorsionparams;
+        copy->_ffvdwparams = _ffvdwparams;
+        copy->_ffchargeparams = _ffchargeparams;
+        copy->_init = true;
+        copy->ClearInstanceState();
+        return copy;
       }
 
       //! Get the unit in which the energy is expressed

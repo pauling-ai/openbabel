@@ -139,7 +139,18 @@ namespace OpenBabel
      //!Clone the current instance. May be desirable in multithreaded environments
      OBForceFieldUFF* MakeNewInstance() override
      {
-       return new OBForceFieldUFF(_id, false);
+       static std::once_flag once;
+       std::call_once(once, [this]() {
+         if (!_init) {
+           ParseParamFile();
+           _init = true;
+         }
+       });
+       OBForceFieldUFF* copy = new OBForceFieldUFF(_id, false);
+       copy->_ffparams = _ffparams;
+       copy->_init = true;
+       copy->ClearInstanceState();
+       return copy;
      }
 
     //! Assignment

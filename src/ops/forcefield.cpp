@@ -88,7 +88,17 @@ namespace OpenBabel
     OpMap::const_iterator iter = pmap->find("ff");
     if(iter!=pmap->end())
       ff = iter->second;
-    OBForceField* pFF = OBForceField::FindForceField(ff);
+    OBForceField* pFFProto = OBForceField::FindForceField(ff);
+    if (!pFFProto) {
+      cerr << "Could not find force field " << ff << "." << endl;
+      return false;
+    }
+    OBForceField* pFF = pFFProto->MakeNewInstance();
+    if (!pFF) {
+      cerr << "Could not create instance of force field " << ff << "." << endl;
+      return false;
+    }
+
     iter = pmap->find("epsilon");
     if (iter!=pmap->end())
       epsilon = atof(iter->second.c_str());
@@ -111,6 +121,7 @@ namespace OpenBabel
     pFF->SetDielectricConstant(epsilon);
     if (!pFF->Setup(*pmol)) {
       cerr  << "Could not setup force field." << endl;
+      delete pFF;
       return false;
     }
 
@@ -123,6 +134,7 @@ namespace OpenBabel
     dp->SetOrigin(fileformatInput);
     pmol->SetData(dp);
 
+    delete pFF;
     return true;
   }
 
@@ -193,7 +205,16 @@ namespace OpenBabel
     OpMap::const_iterator iter = pmap->find("ff");
     if(iter!=pmap->end())
       ff = iter->second;
-    OBForceField* pFF = OBForceField::FindForceField(ff);
+    OBForceField* pFFProto = OBForceField::FindForceField(ff);
+    if (!pFFProto) {
+      cerr << "Could not find force field " << ff << "." << endl;
+      return false;
+    }
+    OBForceField* pFF = pFFProto->MakeNewInstance();
+    if (!pFF) {
+      cerr << "Could not create instance of force field " << ff << "." << endl;
+      return false;
+    }
 
     iter = pmap->find("sd");
     if(iter!=pmap->end())
@@ -259,6 +280,7 @@ namespace OpenBabel
 
     if (!pFF->Setup(*pmol)) {
       cerr  << "Could not setup force field." << endl;
+      delete pFF;
       return false;
     }
 
@@ -279,6 +301,7 @@ namespace OpenBabel
     dp->SetOrigin(fileformatInput);
     pmol->SetData(dp);
 
+    delete pFF;
     return true;
   }
 

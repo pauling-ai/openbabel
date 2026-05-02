@@ -408,6 +408,13 @@ static void testMinimizeMultithreaded()
 // ----------------------------------------------------------------------
 int threading_accuracytest(int argc, char* argv[])
 {
+  // Define location of file formats for testing
+#ifdef FORMATDIR
+  char env[BUFF_SIZE];
+  snprintf(env, BUFF_SIZE, "BABEL_LIBDIR=%s", FORMATDIR);
+  putenv(env);
+#endif
+
   int choice = 1;
   if (argc > 1)
     sscanf(argv[1], "%d", &choice);

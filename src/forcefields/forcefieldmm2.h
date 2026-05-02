@@ -94,7 +94,40 @@ namespace OpenBabel
       }
 
       //!Clone the current instance. May be desirable in multithreaded environments
-      OBForceFieldMM2* MakeNewInstance() override { return new OBForceFieldMM2(*this); }
+      OBForceFieldMM2* MakeNewInstance() override
+      {
+        static std::once_flag once;
+        std::call_once(once, [this]() {
+          if (!_init) {
+            ParseParamFile();
+            _init = true;
+          }
+        });
+        OBForceFieldMM2* copy = new OBForceFieldMM2(_id, false);
+        copy->_ffbondparams = _ffbondparams;
+        copy->_ffangleparams = _ffangleparams;
+        copy->_ffstretchbendparams = _ffstretchbendparams;
+        copy->_fftorsionparams = _fftorsionparams;
+        copy->_ffoutplanebendparams = _ffoutplanebendparams;
+        copy->_ffvdwprparams = _ffvdwprparams;
+        copy->_ffvdwparams = _ffvdwparams;
+        copy->_ffdipoleparams = _ffdipoleparams;
+        copy->bondunit = bondunit;
+        copy->bond_cubic = bond_cubic;
+        copy->bond_quartic = bond_quartic;
+        copy->angleunit = angleunit;
+        copy->angle_sextic = angle_sextic;
+        copy->stretchbendunit = stretchbendunit;
+        copy->torsionunit = torsionunit;
+        copy->outplanebendunit = outplanebendunit;
+        copy->a_expterm = a_expterm;
+        copy->b_expterm = b_expterm;
+        copy->c_expterm = c_expterm;
+        copy->dielectric = dielectric;
+        copy->_init = true;
+        copy->ClearInstanceState();
+        return copy;
+      }
 
 
       const char* Description() override

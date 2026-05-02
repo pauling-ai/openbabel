@@ -564,6 +564,38 @@ const double GAS_CONSTANT = 8.31446261815324e-3 / KCAL_TO_KJ;  //!< kcal mol^-1 
     std::vector<OBBitVec> _interGroup; //!< groups for which intra-molecular interactions should be calculated
     std::vector<std::pair<OBBitVec, OBBitVec> > _interGroups; //!< groups for which intra-molecular
                                                               //!< interactions should be calculated
+
+    /*! Reset all per-instance mutable state (molecule, gradients, etc.) to safe defaults.
+     *  Used by MakeNewInstance() to avoid re-parsing parameter files while ensuring
+     *  the new instance doesn't share allocated memory with the prototype.
+     */
+    void ClearInstanceState()
+    {
+      _mol.Clear();
+      _validSetup = false;
+      _gradientPtr = nullptr;
+      _grad1 = nullptr;
+      _velocityPtr = nullptr;
+      _logos = nullptr;
+      _loglvl = OBFF_LOGLVL_NONE;
+      _origLogLevel = OBFF_LOGLVL_NONE;
+      _ncoords = 0;
+      _current_conformer = 0;
+      _energies.clear();
+      _cstep = 0;
+      _nsteps = 0;
+      _econv = 0.0;
+      _gconv = 0.0;
+      _e_n1 = 0.0;
+      _timestep = 0.0;
+      _temp = 0.0;
+      _vdwpairs.Clear();
+      _elepairs.Clear();
+      _intraGroup.clear();
+      _interGroup.clear();
+      _interGroups.clear();
+    }
+
   public:
     /*! Clone the current instance. May be desirable in multithreaded environments,
      *  Should be deleted after use

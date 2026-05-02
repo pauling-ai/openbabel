@@ -60,6 +60,9 @@ ATOM     11  SG  CYS A  16      44.084  19.337  54.921  1.00  0.00         B S  
       if pybel:
         mol = pybel.readstring('pdb',self.pdbin)
         self.assertTrue(len(mol.residues) == 2)
+        # older bindings may not expose GetSegName
+        if not hasattr(mol.residues[0].OBResidue, 'GetSegName'):
+          return
         cnts = {'AAAA':0,'B':0}
         for a in mol.atoms:
             r = a.OBAtom.GetResidue()

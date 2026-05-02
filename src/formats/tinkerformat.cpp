@@ -204,10 +204,15 @@ namespace OpenBabel
     char buffer[BUFF_SIZE];
 
     // Before we try output of MMFF94 atom types, check if it works
-    OBForceField *ff = OpenBabel::OBForceField::FindForceField("MMFF94");
-    if (mmffTypes && ff && ff->Setup(*pmol))
-      mmffTypes = ff->GetAtomTypes(*pmol);
-    else
+    OBForceField *ffProto = OpenBabel::OBForceField::FindForceField("MMFF94");
+    if (mmffTypes && ffProto) {
+      OBForceField *ff = ffProto->MakeNewInstance();
+      if (ff && ff->Setup(*pmol))
+        mmffTypes = ff->GetAtomTypes(*pmol);
+      else
+        mmffTypes = false;
+      delete ff;
+    } else
       mmffTypes = false; // either the force field isn't available, or it doesn't work
 
     if (!mmffTypes && !mm3Types && !classTypes) {

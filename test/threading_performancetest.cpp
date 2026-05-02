@@ -156,6 +156,13 @@ static double benchmark(const vector<string>& files,
 
 int threading_performancetest(int argc, char* argv[])
 {
+  // Define location of file formats for testing
+#ifdef FORMATDIR
+  char env[BUFF_SIZE];
+  snprintf(env, BUFF_SIZE, "BABEL_LIBDIR=%s", FORMATDIR);
+  putenv(env);
+#endif
+
   string datadir = TESTDATADIR;
   vector<string> files = listMol2Files(datadir);
   if (files.empty()) {

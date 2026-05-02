@@ -259,7 +259,35 @@ namespace OpenBabel
       //!Clone the current instance. May be desirable in multithreaded environments
       OBForceFieldMMFF94* MakeNewInstance() override
       {
-        return new OBForceFieldMMFF94(_id, false);
+        static std::once_flag once;
+        std::call_once(once, [this]() {
+          if (!_init) {
+            ParseParamFile();
+            _init = true;
+          }
+        });
+        OBForceFieldMMFF94* copy = new OBForceFieldMMFF94(_id, false);
+        // Copy parsed parameters to avoid re-reading from disk
+        copy->_ffbondparams = _ffbondparams;
+        copy->_ffbndkparams = _ffbndkparams;
+        copy->_ffangleparams = _ffangleparams;
+        copy->_ffstrbndparams = _ffstrbndparams;
+        copy->_ffdfsbparams = _ffdfsbparams;
+        copy->_fftorsionparams = _fftorsionparams;
+        copy->_ffoopparams = _ffoopparams;
+        copy->_ffvdwparams = _ffvdwparams;
+        copy->_ffchgparams = _ffchgparams;
+        copy->_ffpbciparams = _ffpbciparams;
+        copy->_ffdefparams = _ffdefparams;
+        copy->_ffpropparams = _ffpropparams;
+        copy->_ffpropPilp = _ffpropPilp;
+        copy->_ffpropArom = _ffpropArom;
+        copy->_ffpropLin = _ffpropLin;
+        copy->_ffpropSbmb = _ffpropSbmb;
+        copy->_init = true;
+        copy->mmff94s = mmff94s;
+        copy->ClearInstanceState();
+        return copy;
       }
 
       //! Get the description for this force field

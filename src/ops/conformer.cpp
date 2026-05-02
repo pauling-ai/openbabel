@@ -155,7 +155,16 @@ namespace OpenBabel
       iter = pmap->find("ff");
       if(iter!=pmap->end())
         ff = iter->second;
-      OBForceField* pFF = OBForceField::FindForceField(ff);
+      OBForceField* pFFProto = OBForceField::FindForceField(ff);
+      if (!pFFProto) {
+        cerr << "Could not find force field " << ff << "." << endl;
+        return false;
+      }
+      std::unique_ptr<OBForceField> pFF(pFFProto->MakeNewInstance());
+      if (!pFF) {
+        cerr << "Could not create instance of force field " << ff << "." << endl;
+        return false;
+      }
 
       // set some force field variables
       pFF->SetLogFile(&clog);
