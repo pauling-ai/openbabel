@@ -246,6 +246,11 @@ CAST_GENERICDATA_TO(SquarePlanarStereo)
 
 %import <openbabel/babelconfig.h>
 
+// These globals contain mutex members (thread-safety changes) and are non-copyable.
+// Make them immutable so SWIG does not generate a copy-assignment setter.
+%immutable OpenBabel::ttab;
+%immutable OpenBabel::resdat;
+
 %include <openbabel/data.h>
 %include <openbabel/obutil.h>
 %include <openbabel/math/vector3.h>
@@ -265,6 +270,7 @@ CAST_GENERICDATA_TO(SquarePlanarStereo)
 %template(OBPairFloatingPoint) OpenBabel::OBPairTemplate<float>;
 %include <openbabel/griddata.h>
 %include <openbabel/kekulize.h>
+%immutable OpenBabel::chainsparser;
 %include <openbabel/chains.h>
 %include <openbabel/typer.h>
 %include <openbabel/plugin.h>
@@ -272,6 +278,7 @@ CAST_GENERICDATA_TO(SquarePlanarStereo)
 // To avoid warning in oberror.h about "Nothing known about std::stringbuf"
 namespace std { class stringbuf {}; }
 %warnfilter(503) OpenBabel::OBError; // Not wrapping any of the overloaded operators
+%immutable OpenBabel::obErrorLog;
 %include <openbabel/oberror.h>
 %include <openbabel/format.h>
 %include <openbabel/obconversion.h>
